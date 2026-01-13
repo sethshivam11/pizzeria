@@ -7,24 +7,21 @@ const CartSchema = new mongoose.Schema(
       ref: "user",
       unique: true,
     },
-    pizzas: [
+    items: [
       {
-        item: {
+        pizza: {
           type: mongoose.Schema.Types.ObjectId,
           ref: "pizza",
         },
-        quantity: {
-          type: Number,
-          min: 0,
-          default: 1,
-        },
-      },
-    ],
-    ingredients: [
-      {
-        item: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "ingredient",
+        ingredients: [
+          {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "ingredient",
+          },
+        ],
+        customized: {
+          type: Boolean,
+          default: false,
         },
         quantity: {
           type: Number,

@@ -2,7 +2,8 @@ import { useState } from "react";
 import MenuItem from "../components/MenuItem";
 import { useEffect } from "react";
 import toast from "react-hot-toast";
-import axios, { AxiosError } from "axios";
+import { AxiosError } from "axios";
+import api from "../lib/axios";
 
 function Menu() {
   const [pizzas, setPizzas] = useState([]);
@@ -10,7 +11,7 @@ function Menu() {
 
   const getPizzas = async () => {
     try {
-      const { data } = await axios.get("http://localhost:3000/api/pizzas");
+      const { data } = await api.get("/pizzas");
       if (data?.success) {
         setPizzas(data.data);
       }

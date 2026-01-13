@@ -9,8 +9,8 @@ router.get("/", verifyToken, async (req, res) => {
     const { _id } = req.user;
 
     const cart = await Cart.findOne({ user: _id }).populate([
-      "pizzas.item",
-      "ingredients.item",
+      "items.pizza",
+      "items.ingredients",
     ]);
     if (!cart) {
       return res.status(404).json({
@@ -36,81 +36,43 @@ router.get("/", verifyToken, async (req, res) => {
 router.post("/", verifyToken, async (req, res) => {
   try {
     const { _id } = req.user;
-    const { items, type } = req.body;
+    const { pizzaId } = req.body;
 
-    if (!items || !type) {
+    if (!pizzaId) {
       return res.status(400).json({
         success: false,
-        message: "At least one item is required",
-      });
-    }
-
-    if (type !== "pizza" && type !== "ingredient") {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid type",
+        message: "Pizza id is required",
       });
     }
 
     const cart = await Cart.findOne({ user: _id });
 
     if (cart) {
-      let exists = false;
-      if (type === "pizza") {
-        cart.pizzas = cart.pizzas.map((pizza) => {
-          if (items.some((p) => p === pizza.item.toString())) {
-            exists = true;
-            return { ...pizza, quantity: pizza.quantity + 1 };
-          } else {
-            return pizza;
-          }
+      if (
+        cart.items.some(
+          (item) => item.pizza.toString() === pizzaId && !item.customized
+        )
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: "Pizza already in cart",
         });
-        if (!exists) {
-          const pizzas = items.map((item) => ({ item, quantity: 1 }));
-          cart.pizzas = [...cart.pizzas, ...pizzas];
-        }
-      } else if (type === "ingredient") {
-        cart.ingredients = cart.ingredients.map((ingredient) => {
-          if (items.some((i) => i === ingredient.item.toString())) {
-            exists = true;
-            return { ...ingredient, quantity: ingredient.quantity + 1 };
-          } else {
-            return ingredient;
-          }
-        });
-        if (!exists) {
-          const ingredients = items.map((item) => ({ item, quantity: 1 }));
-          cart.ingredients = [...cart.ingredients, ...ingredients];
-        }
       }
 
+      cart.items.push({ pizza: pizzaId });
       await cart.save();
-      await cart.populate(["pizzas.item", "ingredients.item"]);
+      await cart.populate(["items.pizza", "items.ingredients"]);
 
       return res.status(200).json({
         success: true,
         data: cart,
-        message: "Item added to cart",
-      });
-    }
-
-    let pizzas = [];
-    let ingredients = [];
-
-    if (type === "pizza") {
-      items.map((item) => {
-        pizzas.push({ item, quantity: 1 });
-      });
-    } else if (type === "ingredient") {
-      items.map((item) => {
-        ingredients.push({ item, quantity: 1 });
+        message: "Pizza added to cart",
       });
     }
 
     const newCart = await Cart.create({
       user: _id,
-      pizzas,
-      ingredients,
+      items: [{ pizza: pizzaId }],
     });
 
     return res.status(200).json({
@@ -127,23 +89,19 @@ router.post("/", verifyToken, async (req, res) => {
   }
 });
 
-router.put("/", verifyToken, async (req, res) => {
+router.put("/ingredients", verifyToken, async (req, res) => {
   try {
-    const { _id } = req.user;
-    const { item, count, type } = req.body;
-
-    if (!item || !count || !type) {
+    const { pizzaId, ingredients } = req.body;
+    if (!pizzaId || !ingredients || ingredients?.length === 0) {
       return res.status(400).json({
         success: false,
-        message: "Item, Count & Type are required",
+        message: "Pizza id and ingredients is required",
       });
     }
 
-    const cart = await Cart.findOne({ user: _id }).populate([
-      "pizzas.item",
-      "ingredients.item",
-    ]);
+    const { _id } = req.user;
 
+    const cart = await Cart.findOne({ user: _id });
     if (!cart) {
       return res.status(404).json({
         success: false,
@@ -151,31 +109,30 @@ router.put("/", verifyToken, async (req, res) => {
       });
     }
 
-    if (type === "pizza") {
-      cart.pizzas = cart.pizzas?.map((pizza) => {
-        if (pizza.item._id?.toString() === item.toString()) {
-          return { ...pizza, quantity: count };
-        } else return pizza;
-      });
-    } else if (type === "ingredient") {
-      cart.ingredients = cart.ingredients?.map((ingredient) => {
-        if (ingredient.item._id?.toString() === item.toString()) {
-          return { ...ingredient, quantity: count };
-        } else return ingredient;
-      });
-    } else {
-      return res.status(400).json({
+    let exists = false;
+    cart.items = cart.items.map((item) => {
+      if (item.pizza.toString() === pizzaId) {
+        exists = true;
+        return { ...item, ingredients, customized: true };
+      } else {
+        return item;
+      }
+    });
+
+    if (!exists) {
+      return res.status(404).json({
         success: false,
-        message: "Invalid type",
+        message: "Pizza does not exist in cart",
       });
     }
 
     await cart.save();
+    await cart.populate(["items.pizza", "items.ingredients"]);
 
     return res.status(200).json({
       success: true,
       data: cart,
-      message: "Item quantity updated",
+      message: "Ingredients added to pizza",
     });
   } catch (error) {
     console.log(error);
@@ -186,12 +143,69 @@ router.put("/", verifyToken, async (req, res) => {
   }
 });
 
-router.delete("/:itemId", verifyToken, async (req, res) => {
+router.put("/:pizzaId", verifyToken, async (req, res) => {
   try {
     const { _id } = req.user;
-    const { itemId } = req.params;
+    const { pizzaId } = req.params;
+    const { count } = req.body;
 
-    if (!itemId) {
+    if (!pizzaId || !count) {
+      return res.status(400).json({
+        success: false,
+        message: "Item & Count are required",
+      });
+    }
+
+    const cart = await Cart.findOne({ user: _id }).populate([
+      "items.pizza",
+      "items.ingredients",
+    ]);
+
+    if (!cart) {
+      return res.status(404).json({
+        success: false,
+        message: "Cart not found",
+      });
+    }
+
+    let exists = false;
+    cart.items = cart.items?.map((item) => {
+      if (item.pizza._id?.toString() === pizzaId && !item.customized) {
+        exists = true;
+        return { ...item, quantity: count };
+      } else return item;
+    });
+
+    if (!exists) {
+      return res.status(404).json({
+        success: false,
+        message: "Pizza does not exist in cart",
+      });
+    }
+
+    await cart.save();
+
+    return res.status(200).json({
+      success: true,
+      data: cart,
+      message: "Pizza quantity updated",
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+});
+
+router.delete("/:pizzaId", verifyToken, async (req, res) => {
+  try {
+    const { _id } = req.user;
+    const { pizzaId } = req.params;
+    const customized = req.query.customized === "true";
+
+    if (!pizzaId) {
       return res.status(400).json({
         success: false,
         message: "Item id is required",
@@ -199,8 +213,8 @@ router.delete("/:itemId", verifyToken, async (req, res) => {
     }
 
     const cart = await Cart.findOne({ user: _id }).populate([
-      "pizzas.item",
-      "ingredients.item",
+      "items.pizza",
+      "items.ingredients",
     ]);
     if (!cart) {
       return res.status(404).json({
@@ -209,11 +223,23 @@ router.delete("/:itemId", verifyToken, async (req, res) => {
       });
     }
 
-    cart.pizzas = cart.pizzas.filter(
-      (p) => p.item._id.toString() !== itemId.toString()
+    const pizzaExists = cart.items.some(
+      (item) =>
+        item.pizza?._id.toString() === pizzaId && item.customized === customized
     );
-    cart.ingredients = cart.ingredients.filter(
-      (i) => i.item._id.toString() !== itemId.toString()
+    if (!pizzaExists) {
+      return res.status(404).json({
+        success: false,
+        message: "Pizza already not in cart",
+      });
+    }
+
+    cart.items = cart.items.filter(
+      (item) =>
+        !(
+          item.pizza?._id.toString() === pizzaId &&
+          item.customized === customized
+        )
     );
 
     await cart.save();
