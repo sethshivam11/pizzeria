@@ -12,11 +12,14 @@ function MenuItem({ pizza, className = "" }) {
   const { user } = useUser();
 
   const inCart = useMemo(() => {
-    return cart.pizzas?.some((p) => p?.item?._id === pizza?._id);
+    return cart.items?.some(
+      (item) => item?.pizza?._id === pizza?._id && !item?.customized
+    );
   }, [cart]);
 
   const quantity = useMemo(() => {
-    return cart.pizzas?.find((p) => p?.item?._id === pizza?._id)?.quantity;
+    return cart.items?.find((item) => item?.pizza?._id === pizza?._id)
+      ?.quantity;
   }, [cart]);
 
   const handleAdd = async () => {
@@ -26,13 +29,12 @@ function MenuItem({ pizza, className = "" }) {
       return;
     }
     if (!pizza?._id) return;
-    const data = await addToCart([pizza._id], "pizza");
-    console.log(data);
+    const data = await addToCart(pizza._id);
     if (!data.success) toast.error(data.message);
   };
 
   const updateQuantity = async (quantity) => {
-    const data = await updateCount(pizza._id, "pizza", quantity);
+    const data = await updateCount(pizza._id, quantity);
     if (!data.success) {
       toast.error(data.message);
     }

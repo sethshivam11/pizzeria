@@ -7,13 +7,13 @@ import { useUser } from "./UserProvider";
 const initialState = {
   cart: {
     user: "",
-    pizzas: [],
-    ingredients: [],
+    items: [],
   },
   count: 0,
   loading: true,
   getCart: () => {},
   addToCart: () => {},
+  addIngredients: () => {},
   updateCount: () => {},
   removeFromCart: () => {},
 };
@@ -25,6 +25,7 @@ const CartProvider = ({ children }) => {
 
   const [cart, setCart] = useState(initialState.cart);
   const [loading, setLoading] = useState(initialState.loading);
+  const [ingredients, setIngredients] = useState(initialState.ingredients);
   const [count, setCount] = useState(0);
 
   const getCart = async () => {
@@ -33,7 +34,7 @@ const CartProvider = ({ children }) => {
       const { data } = await api.get("/cart");
       if (data?.success) {
         setCart(data.data);
-        setCount(data.data.pizzas.length + data.data.ingredients.length);
+        setCount(data.data.items.length);
         return data;
       }
     } catch (error) {
@@ -53,15 +54,12 @@ const CartProvider = ({ children }) => {
     }
   };
 
-  const addToCart = async (items, type) => {
+  const addToCart = async (pizzaId) => {
     try {
-      const { data } = await api.post("/cart", {
-        items,
-        type,
-      });
+      const { data } = await api.post("/cart", { pizzaId });
       if (data?.success) {
         setCart(data.data);
-        setCount(data.data.pizzas.length + data.data.ingredients.length);
+        setCount(data.data.items.length);
         return data;
       }
     } catch (error) {
@@ -76,16 +74,15 @@ const CartProvider = ({ children }) => {
     }
   };
 
-  const updateCount = async (itemId, type, count) => {
+  const addIngredients = async (pizzaId, ingredients) => {
     try {
-      const { data } = await api.put("/cart", {
-        item: itemId,
-        type,
-        count,
+      const { data } = await api.put("/cart/ingredients", {
+        pizzaId,
+        ingredients,
       });
       if (data?.success) {
         setCart(data.data);
-        setCount(data.data.pizzas.length + data.data.ingredients.length);
+        setCount(data.data.items.length);
         return data;
       }
     } catch (error) {
@@ -100,12 +97,34 @@ const CartProvider = ({ children }) => {
     }
   };
 
-  const removeFromCart = async (itemId) => {
+  const updateCount = async (pizzaId, count) => {
     try {
-      const { data } = await api.delete(`/cart/${itemId}`);
+      const { data } = await api.put(`/cart/${pizzaId}`, { count });
       if (data?.success) {
         setCart(data.data);
-        setCount(data.data.pizzas.length + data.data.ingredients.length);
+        setCount(data.data.items.length);
+        return data;
+      }
+    } catch (error) {
+      let message = "Something went wrong";
+      if (error instanceof AxiosError) {
+        message = error.response?.data?.message || message;
+        console.log(message);
+      } else {
+        console.log(error);
+      }
+      return { success: false, message };
+    }
+  };
+
+  const removeFromCart = async (pizzaId, customized) => {
+    try {
+      const { data } = await api.delete(
+        `/cart/${pizzaId}${customized ? "?customized=true" : ""}`
+      );
+      if (data?.success) {
+        setCart(data.data);
+        setCount(data.data.items.length);
         return data;
       }
     } catch (error) {
@@ -133,6 +152,7 @@ const CartProvider = ({ children }) => {
         loading,
         getCart,
         addToCart,
+        addIngredients,
         updateCount,
         removeFromCart,
       }}

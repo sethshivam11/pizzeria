@@ -5,6 +5,7 @@ import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import Menu from "./pages/Menu";
 import Customize from "./pages/Customize";
+import CustomizePizza from "./pages/CustomizePizza";
 import NotFound from "./pages/NotFound";
 import Cart from "./pages/Cart";
 import Login from "./pages/Login";
@@ -23,6 +24,7 @@ function App() {
         <Route path="/menu" element={<Menu />} />
         <Route path="/cart" element={<Cart />} />
         <Route path="/customize" element={<Customize />} />
+        <Route path="/customize/:pizzaId" element={<CustomizePizza />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       <Footer />

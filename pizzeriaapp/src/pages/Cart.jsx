@@ -5,33 +5,135 @@ import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { useCart } from "../context/CartProvider";
 
-function Cart() {
-  const { user, loading: userLoading } = useUser();
-  const { cart, loading, count, updateCount, removeFromCart } = useCart();
+const CartItem = ({ item }) => {
+  const { updateCount, removeFromCart } = useCart();
 
-  const navigate = useNavigate();
+  const price = useMemo(() => {
+    const ingredientsPrice =
+      item?.ingredients?.reduce((acc, item) => acc + item?.price, 0) ?? 0;
+    return item?.pizza?.price + ingredientsPrice;
+  }, [item]);
 
-  const cartValue = useMemo(() => {
-    const pizzas =
-      cart.pizzas?.reduce((prev, acc) => prev + acc.item.price, 0) ?? 0;
-    const ingredients =
-      cart.ingredients?.reduce((prev, acc) => prev + acc.item.price, 0) ?? 0;
-    return pizzas + ingredients;
-  }, [cart]);
-
-  const updateQuantity = async (itemId, type, quantity) => {
-    const data = await updateCount(itemId, type, quantity);
+  const updateQuantity = async (itemId, quantity) => {
+    const data = await updateCount(itemId, quantity);
     if (!data.success) {
       toast.error(data.message);
     }
   };
 
-  const removeItem = async (itemId) => {
+  const removeItem = async (itemId, customized) => {
     const data = await removeFromCart(itemId);
     if (!data.success) {
       toast.error(data.message);
     }
   };
+
+  return (
+    <div className="row border rounded position-relative">
+      {item?.customized && (
+        <div className="position-absolute top-0 end-0 p-2 w-auto">
+          <div className="rounded-pill bg-dark text-light px-2 badge">
+            Custom
+          </div>
+        </div>
+      )}
+      <div className="col-4 d-flex justify-content-center align-items-center">
+        <img src={item.pizza.image} className="w-75" />
+      </div>
+      <div className="col-8 p-4 d-flex justify-content-between flex-column">
+        <div>
+          <h5 className="h5">{item.pizza.name}</h5>
+          <p>{item.pizza.description}</p>
+          {item?.ingredients?.length > 0 && (
+            <p>
+              <strong>Added: </strong>
+              {item?.ingredients?.map((item) => item?.tname).join(", ")}
+            </p>
+          )}
+        </div>
+        <div className="d-flex justify-content-between align-items-center gap-2">
+          <h2 className="h2 text-success" style={{ letterSpacing: "-0.005em" }}>
+            {Number(price).toLocaleString("en-IN", {
+              style: "currency",
+              currency: "INR",
+              maximumFractionDigits: 0,
+            })}
+          </h2>
+          <div
+            className={`border ${
+              item?.pizza?.type === "veg" ? "border-success" : "border-danger"
+            } p-1 d-flex align-items-center justify-content-center`}
+          >
+            <span
+              className={`rounded-circle ${
+                item?.pizza?.type === "veg" ? "bg-success" : "bg-danger"
+              }`}
+              style={{ width: 20, height: 20 }}
+            />
+          </div>
+        </div>
+        <div className="d-flex align-items-center justify-content-between gap-2">
+          <Link
+            to={`/customize/${item?.pizza?._id}${
+              item?.customized ? "?customized=true" : ""
+            }`}
+          >
+            Customize
+          </Link>
+          <div className="d-flex align-items-center justify-content-end gap-2">
+            {item?.quantity === 1 ? (
+              <button
+                className="btn btn-sm btn-dark rounded-pill"
+                onClick={() => removeItem(item.pizza._id, item.customized)}
+                disabled={item?.quantity > 1}
+              >
+                <Trash2 />
+              </button>
+            ) : (
+              <button
+                className="btn btn-sm btn-dark rounded-pill"
+                onClick={() =>
+                  updateQuantity(item.pizza._id, item.quantity - 1)
+                }
+                disabled={item.quantity === 1}
+              >
+                <Minus />
+              </button>
+            )}
+            <p className="h2">{item.quantity}</p>
+            <button
+              className="btn btn-sm btn-warning rounded-pill"
+              onClick={() => updateQuantity(item.pizza._id, item.quantity + 1)}
+              disabled={item.quantity > 10}
+            >
+              <Plus />
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+function Cart() {
+  const { user, loading: userLoading } = useUser();
+  const { cart, loading, count } = useCart();
+
+  const navigate = useNavigate();
+
+  const cartValue = useMemo(() => {
+    const pizzas =
+      cart.items?.reduce((prev, acc) => {
+        if (acc.pizza?.ingredients?.length === 0) {
+          return prev + acc.pizza.price;
+        } else {
+          const ingredientsPrice =
+            acc?.ingredients?.reduce((acc, item) => acc + item?.price, 0) ?? 0;
+          return prev + acc.pizza.price + ingredientsPrice;
+        }
+      }, 0) ?? 0;
+    return pizzas;
+  }, [cart]);
 
   useEffect(() => {
     if (userLoading) return;
@@ -68,155 +170,19 @@ function Cart() {
               className="d-flex flex-column gap-2"
               style={{ minHeight: "80vh" }}
             >
-              {cart?.pizzas?.length === 0 &&
-                cart?.ingredients?.length === 0 && (
-                  <div
-                    className="border d-flex align-items-center justify-content-center flex-column gap-1 p-4"
-                    style={{ minHeight: "80vh" }}
-                  >
-                    <History size="40" />
-                    <h3 style={{ fontSize: 30, letterSpacing: "-0.05em" }}>
-                      Cart is Empty
-                    </h3>
-                  </div>
-                )}
-              {cart.pizzas?.map((pizza, index) => (
-                <div className="row border rounded" key={index}>
-                  <div className="col-4 d-flex justify-content-center align-items-center">
-                    <img src={pizza.item.image} className="w-75" />
-                  </div>
-                  <div className="col-8 p-4 d-flex justify-content-between flex-column">
-                    <div>
-                      <h5 className="h5">{pizza.item.name}</h5>
-                      <p>{pizza.item.description}</p>
-                    </div>
-                    <div className="d-flex justify-content-between align-items-center gap-2">
-                      <h2
-                        className="h2 text-success"
-                        style={{ letterSpacing: "-0.005em" }}
-                      >
-                        {Number(pizza.item.price).toLocaleString("en-IN", {
-                          style: "currency",
-                          currency: "INR",
-                          maximumFractionDigits: 0,
-                        })}
-                      </h2>
-                      <div
-                        className={`border ${
-                          pizza?.item.type === "veg"
-                            ? "border-success"
-                            : "border-danger"
-                        } p-1 d-flex align-items-center justify-content-center`}
-                      >
-                        <span
-                          className={`rounded-circle ${
-                            pizza?.item.type === "veg"
-                              ? "bg-success"
-                              : "bg-danger"
-                          }`}
-                          style={{ width: 20, height: 20 }}
-                        />
-                      </div>
-                    </div>
-                    <div className="d-flex align-items-center justify-content-end gap-2">
-                      {pizza?.quantity === 1 ? (
-                        <button
-                          className="btn btn-sm btn-dark rounded-pill"
-                          onClick={() => removeItem(pizza?.item?._id)}
-                          disabled={pizza?.quantity > 1}
-                        >
-                          <Trash2 />
-                        </button>
-                      ) : (
-                        <button
-                          className="btn btn-sm btn-dark rounded-pill"
-                          onClick={() =>
-                            updateQuantity(
-                              pizza.item._id,
-                              "pizza",
-                              pizza.quantity - 1
-                            )
-                          }
-                          disabled={pizza.quantity === 1}
-                        >
-                          <Minus />
-                        </button>
-                      )}
-                      <p className="h2">{pizza.quantity}</p>
-                      <button
-                        className="btn btn-sm btn-warning rounded-pill"
-                        onClick={() =>
-                          updateQuantity(
-                            pizza.item._id,
-                            "pizza",
-                            pizza.quantity + 1
-                          )
-                        }
-                        disabled={pizza.quantity > 10}
-                      >
-                        <Plus />
-                      </button>
-                    </div>
-                  </div>
+              {cart?.items?.length === 0 && (
+                <div
+                  className="border d-flex align-items-center justify-content-center flex-column gap-1 p-4"
+                  style={{ minHeight: "80vh" }}
+                >
+                  <History size="40" />
+                  <h3 style={{ fontSize: 30, letterSpacing: "-0.05em" }}>
+                    Cart is Empty
+                  </h3>
                 </div>
-              ))}
-              {cart.ingredients?.map((ingredient, index) => (
-                <div className="row border rounded" key={index}>
-                  <div className="col-4 d-flex justify-content-center align-items-center">
-                    <img src={ingredient.item.image} className="w-50" />
-                  </div>
-                  <div className="col-8 p-4">
-                    <h5 className="h5">{ingredient.item.tname}</h5>
-                    <h2
-                      className="h2 text-success"
-                      style={{ letterSpacing: "-0.005em" }}
-                    >
-                      {Number(ingredient.item.price).toLocaleString("en-IN", {
-                        style: "currency",
-                        currency: "INR",
-                        maximumFractionDigits: 0,
-                      })}
-                    </h2>
-                    <div className="d-flex align-items-center justify-content-end gap-2">
-                      {ingredient.quantity === 1 ? (
-                        <button
-                          className="btn btn-sm btn-dark rounded-pill"
-                          onClick={() => removeItem(ingredient.item._id)}
-                        >
-                          <Trash2 />
-                        </button>
-                      ) : (
-                        <button
-                          className="btn btn-sm btn-dark rounded-pill"
-                          onClick={() =>
-                            updateQuantity(
-                              ingredient.item._id,
-                              "ingredient",
-                              ingredient.quantity - 1
-                            )
-                          }
-                          disabled={ingredient.quantity === 1}
-                        >
-                          <Minus />
-                        </button>
-                      )}
-                      <p className="h2">{ingredient.quantity}</p>
-                      <button
-                        className="btn btn-sm btn-warning rounded-pill"
-                        onClick={() =>
-                          updateQuantity(
-                            ingredient.item._id,
-                            "ingredient",
-                            ingredient.quantity + 1
-                          )
-                        }
-                        disabled={ingredient.quantity > 10}
-                      >
-                        <Plus />
-                      </button>
-                    </div>
-                  </div>
-                </div>
+              )}
+              {cart.items?.map((item, index) => (
+                <CartItem item={item} key={index} />
               ))}
             </div>
           )}
