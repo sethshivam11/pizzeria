@@ -42,7 +42,7 @@ function MenuItem({ pizza, className = "" }) {
   };
 
   const updateQuantity = async (quantity) => {
-    const data = await updateCount(pizza._id, quantity);
+    const data = await updateCount(pizza._id, quantity, customized);
     if (!data.success) {
       toast.error(data.message);
     }

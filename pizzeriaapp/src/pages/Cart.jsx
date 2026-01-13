@@ -14,8 +14,8 @@ const CartItem = ({ item }) => {
     return item?.pizza?.price + ingredientsPrice;
   }, [item]);
 
-  const updateQuantity = async (itemId, quantity) => {
-    const data = await updateCount(itemId, quantity);
+  const updateQuantity = async (itemId, quantity, customized) => {
+    const data = await updateCount(itemId, quantity, customized);
     if (!data.success) {
       toast.error(data.message);
     }
@@ -93,7 +93,11 @@ const CartItem = ({ item }) => {
               <button
                 className="btn btn-sm btn-dark rounded-pill"
                 onClick={() =>
-                  updateQuantity(item.pizza._id, item.quantity - 1)
+                  updateQuantity(
+                    item.pizza._id,
+                    item.quantity - 1,
+                    item?.customized
+                  )
                 }
                 disabled={item.quantity === 1}
               >
@@ -103,7 +107,13 @@ const CartItem = ({ item }) => {
             <p className="h2">{item.quantity}</p>
             <button
               className="btn btn-sm btn-warning rounded-pill"
-              onClick={() => updateQuantity(item.pizza._id, item.quantity + 1)}
+              onClick={() =>
+                updateQuantity(
+                  item.pizza._id,
+                  item.quantity + 1,
+                  item?.customized
+                )
+              }
               disabled={item.quantity > 10}
             >
               <Plus />

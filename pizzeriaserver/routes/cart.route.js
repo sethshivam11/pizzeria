@@ -148,6 +148,7 @@ router.put("/:pizzaId", verifyToken, async (req, res) => {
     const { _id } = req.user;
     const { pizzaId } = req.params;
     const { count } = req.body;
+    const customized = req.query?.customized === "true";
 
     if (!pizzaId || !count) {
       return res.status(400).json({
@@ -170,7 +171,10 @@ router.put("/:pizzaId", verifyToken, async (req, res) => {
 
     let exists = false;
     cart.items = cart.items?.map((item) => {
-      if (item.pizza._id?.toString() === pizzaId && !item.customized) {
+      if (
+        item.pizza._id?.toString() === pizzaId &&
+        item.customized === customized
+      ) {
         exists = true;
         return { ...item, quantity: count };
       } else return item;

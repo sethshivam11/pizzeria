@@ -96,9 +96,12 @@ const CartProvider = ({ children }) => {
     }
   };
 
-  const updateCount = async (pizzaId, count) => {
+  const updateCount = async (pizzaId, count, customized) => {
     try {
-      const { data } = await api.put(`/cart/${pizzaId}`, { count });
+      const { data } = await api.put(
+        `/cart/${pizzaId}${customized ? "?customized=true" : ""}`,
+        { count }
+      );
       if (data?.success) {
         setCart(data.data);
         setCount(data.data.items.length);
