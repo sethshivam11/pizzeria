@@ -74,6 +74,7 @@ const UserProvider = ({ children }) => {
       const { data } = await api.get("/users/logout");
       if (data?.success) {
         setUser(initialState.user);
+        localStorage.clear();
         return data;
       }
     } catch (error) {
@@ -120,7 +121,9 @@ const UserProvider = ({ children }) => {
   }, [user]);
 
   return (
-    <UserContext.Provider value={{ user, loading, login, signUp, getUser, logOut }}>
+    <UserContext.Provider
+      value={{ user, loading, login, signUp, getUser, logOut }}
+    >
       {children}
     </UserContext.Provider>
   );
