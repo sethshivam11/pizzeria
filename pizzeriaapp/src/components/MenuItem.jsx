@@ -13,16 +13,24 @@ function MenuItem({ pizza, className = "" }) {
 
   const inCart = useMemo(() => {
     return cart.items?.some(
-      (item) => item?.pizza?._id === pizza?._id && !item?.customized
+      (item) =>
+        String(item.pizza?._id || item.pizza) === String(pizza._id) &&
+        item.customized === false
     );
-  }, [cart]);
+  }, [cart.items, pizza._id]);
 
   const quantity = useMemo(() => {
-    return cart.items?.find((item) => item?.pizza?._id === pizza?._id)
-      ?.quantity;
-  }, [cart]);
+    return (
+      cart.items?.find(
+        (item) =>
+          String(item.pizza?._id || item.pizza) === String(pizza._id) &&
+          item.customized === false
+      )?.quantity || 0
+    );
+  }, [cart.items, pizza._id]);
 
   const handleAdd = async () => {
+    console.log(cart.items);
     if (user._id?.length === 0) {
       toast("Please login to continue");
       navigate("/login");

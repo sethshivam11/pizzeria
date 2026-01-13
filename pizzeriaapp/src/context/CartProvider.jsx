@@ -25,7 +25,6 @@ const CartProvider = ({ children }) => {
 
   const [cart, setCart] = useState(initialState.cart);
   const [loading, setLoading] = useState(initialState.loading);
-  const [ingredients, setIngredients] = useState(initialState.ingredients);
   const [count, setCount] = useState(0);
 
   const getCart = async () => {
