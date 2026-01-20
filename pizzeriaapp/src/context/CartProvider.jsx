@@ -96,9 +96,12 @@ const CartProvider = ({ children }) => {
     }
   };
 
-  const updateCount = async (pizzaId, count) => {
+  const updateCount = async (pizzaId, count, customized) => {
     try {
-      const { data } = await api.put(`/cart/${pizzaId}`, { count });
+      const { data } = await api.put(
+        `/cart/${pizzaId}${customized ? "?customized=true" : ""}`,
+        { count },
+      );
       if (data?.success) {
         setCart(data.data);
         setCount(data.data.items.length);
@@ -119,7 +122,7 @@ const CartProvider = ({ children }) => {
   const removeFromCart = async (pizzaId, customized) => {
     try {
       const { data } = await api.delete(
-        `/cart/${pizzaId}${customized ? "?customized=true" : ""}`
+        `/cart/${pizzaId}${customized ? "?customized=true" : ""}`,
       );
       if (data?.success) {
         setCart(data.data);
@@ -139,7 +142,10 @@ const CartProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    if (!user._id) return;
+    if (!user._id) {
+      if (loading) setLoading(false);
+      return;
+    }
     getCart();
   }, [user]);
 

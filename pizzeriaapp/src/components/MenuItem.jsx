@@ -42,7 +42,7 @@ function MenuItem({ pizza, className = "" }) {
   };
 
   const updateQuantity = async (quantity) => {
-    const data = await updateCount(pizza._id, quantity);
+    const data = await updateCount(pizza._id, quantity, customized);
     if (!data.success) {
       toast.error(data.message);
     }
@@ -107,7 +107,7 @@ function MenuItem({ pizza, className = "" }) {
         </div>
         {inCart ? (
           <div className="d-flex justify-content-between align-items-center">
-            <Link to={`/customize`}>Customize</Link>
+            <Link to={`/${pizza?._id}`}>Customize</Link>
             <div className="d-flex align-items-center gap-2">
               {quantity === 1 ? (
                 <button
