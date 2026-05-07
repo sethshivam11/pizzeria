@@ -107,7 +107,7 @@ function MenuItem({ pizza, className = "" }) {
         </div>
         {inCart ? (
           <div className="d-flex justify-content-between align-items-center">
-            <Link to={`/${pizza?._id}`}>Customize</Link>
+            <Link to={`/customize/${pizza?._id}`}>Customize</Link>
             <div className="d-flex align-items-center gap-2">
               {quantity === 1 ? (
                 <button
