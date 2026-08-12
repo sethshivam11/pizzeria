@@ -22,7 +22,7 @@ const CartItem = ({ item }) => {
   };
 
   const removeItem = async (itemId, customized) => {
-    const data = await removeFromCart(itemId);
+    const data = await removeFromCart(itemId, customized);
     if (!data.success) {
       toast.error(data.message);
     }

@@ -30,7 +30,6 @@ function MenuItem({ pizza, className = "" }) {
   }, [cart.items, pizza._id]);
 
   const handleAdd = async () => {
-    console.log(cart.items);
     if (user._id?.length === 0) {
       toast("Please login to continue");
       navigate("/login");
@@ -42,7 +41,7 @@ function MenuItem({ pizza, className = "" }) {
   };
 
   const updateQuantity = async (quantity) => {
-    const data = await updateCount(pizza._id, quantity, customized);
+    const data = await updateCount(pizza._id, quantity);
     if (!data.success) {
       toast.error(data.message);
     }
