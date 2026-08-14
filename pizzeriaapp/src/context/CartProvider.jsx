@@ -73,10 +73,10 @@ const CartProvider = ({ children }) => {
     }
   };
 
-  const addIngredients = async (pizzaId, ingredients) => {
+  const addIngredients = async (itemId, ingredients) => {
     try {
       const { data } = await api.put("/cart/ingredients", {
-        pizzaId,
+        itemId,
         ingredients,
       });
       if (data?.success) {
@@ -96,12 +96,9 @@ const CartProvider = ({ children }) => {
     }
   };
 
-  const updateCount = async (pizzaId, count, customized) => {
+  const updateCount = async (itemId, count, customized) => {
     try {
-      const { data } = await api.put(
-        `/cart/${pizzaId}${customized ? "?customized=true" : ""}`,
-        { count },
-      );
+      const { data } = await api.put(`/cart/${itemId}`, { count });
       if (data?.success) {
         setCart(data.data);
         setCount(data.data.items.length);
@@ -119,11 +116,29 @@ const CartProvider = ({ children }) => {
     }
   };
 
-  const removeFromCart = async (pizzaId, customized) => {
+  const removeFromCart = async (itemId, customized) => {
     try {
-      const { data } = await api.delete(
-        `/cart/${pizzaId}${customized ? "?customized=true" : ""}`,
-      );
+      const { data } = await api.delete(`/cart/${itemId}`);
+      if (data?.success) {
+        setCart(data.data);
+        setCount(data.data.items.length);
+        return data;
+      }
+    } catch (error) {
+      let message = "Something went wrong";
+      if (error instanceof AxiosError) {
+        message = error.response?.data?.message || message;
+        console.log(message);
+      } else {
+        console.log(error);
+      }
+      return { success: false, message };
+    }
+  };
+
+  const checkout = async () => {
+    try {
+      const { data } = await api.put("/cart/checkout");
       if (data?.success) {
         setCart(data.data);
         setCount(data.data.items.length);
@@ -160,6 +175,7 @@ const CartProvider = ({ children }) => {
         addIngredients,
         updateCount,
         removeFromCart,
+        checkout,
       }}
     >
       {children}

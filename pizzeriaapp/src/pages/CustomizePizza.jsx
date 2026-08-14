@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
 import axios, { AxiosError } from "axios";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useCart } from "../context/CartProvider";
 import { useUser } from "../context/UserProvider";
 import toast from "react-hot-toast";
@@ -67,8 +67,7 @@ const PizzaItem = ({ pizza }) => {
 
 function Build() {
   const navigate = useNavigate();
-  const { pizzaId } = useParams();
-  const [searchParams] = useSearchParams();
+  const { itemId } = useParams();
 
   const { addIngredients, cart, loading: cartLoading } = useCart();
   const { user } = useUser();
@@ -82,15 +81,12 @@ function Build() {
   }, [items]);
 
   const pizza = useMemo(() => {
-    const customized = searchParams.get("customized") === "true";
-
-    const item = cart?.items?.find(
-      (i) => i.pizza._id === pizzaId && i?.customized === customized
-    );
+    const item = cart?.items?.find((item) => item._id === itemId);
+    console.log(item)
     if (!item?.pizza) return null;
     if (item?.ingredients) setItems(item.ingredients);
     return { ...item.pizza, customized: item?.customized };
-  }, [pizzaId, cart]);
+  }, [itemId, cart]);
 
   const getIngredients = async () => {
     try {
@@ -120,7 +116,7 @@ function Build() {
     if (!user?._id) return;
 
     const ingredients = items.map((item) => item?._id);
-    const data = await addIngredients(pizzaId, ingredients);
+    const data = await addIngredients(itemId, ingredients);
 
     if (data.success) {
       navigate("/cart");
@@ -192,7 +188,7 @@ function Build() {
                         type="checkbox"
                         className="form-check-input"
                         checked={items.some(
-                          (item) => item._id === ingredient._id
+                          (item) => item._id === ingredient._id,
                         )}
                         onChange={(e) => {
                           console.log(ingredient);
@@ -201,8 +197,8 @@ function Build() {
                           } else {
                             setItems((prev) =>
                               prev.filter(
-                                (item) => item?._id !== ingredient?._id
-                              )
+                                (item) => item?._id !== ingredient?._id,
+                              ),
                             );
                           }
                         }}

@@ -50,7 +50,10 @@ router.post("/", verifyToken, async (req, res) => {
     if (cart) {
       if (
         cart.items.some(
-          (item) => item.pizza.toString() === pizzaId && !item.customized
+          (item) =>
+            item.pizza.toString() === pizzaId &&
+            !item.customized &&
+            item.ingredients.length === 0,
         )
       ) {
         return res.status(400).json({
@@ -89,13 +92,42 @@ router.post("/", verifyToken, async (req, res) => {
   }
 });
 
+router.put("/checkout", verifyToken, async (req, res) => {
+  try {
+    const { _id } = req.user;
+
+    const cart = await Cart.findOne({ user: _id });
+    if (!cart) {
+      return res.status(404).json({
+        success: false,
+        message: "Cart not found",
+      });
+    }
+
+    cart.items = [];
+    await cart.save();
+
+    return res.status(200).json({
+      success: true,
+      data: cart,
+      message: "Cart checked out successfully",
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+});
+
 router.put("/ingredients", verifyToken, async (req, res) => {
   try {
-    const { pizzaId, ingredients } = req.body;
-    if (!pizzaId || !ingredients || ingredients?.length === 0) {
+    const { itemId, ingredients } = req.body;
+    if (!itemId || !ingredients || ingredients?.length === 0) {
       return res.status(400).json({
         success: false,
-        message: "Pizza id and ingredients is required",
+        message: "Item id and ingredients is required",
       });
     }
 
@@ -111,7 +143,7 @@ router.put("/ingredients", verifyToken, async (req, res) => {
 
     let exists = false;
     cart.items = cart.items.map((item) => {
-      if (item.pizza.toString() === pizzaId) {
+      if (item._id.toString() === itemId) {
         exists = true;
         return { ...item, ingredients, customized: true };
       } else {
@@ -143,17 +175,16 @@ router.put("/ingredients", verifyToken, async (req, res) => {
   }
 });
 
-router.put("/:pizzaId", verifyToken, async (req, res) => {
+router.put("/:itemId", verifyToken, async (req, res) => {
   try {
     const { _id } = req.user;
-    const { pizzaId } = req.params;
+    const { itemId } = req.params;
     const { count } = req.body;
-    const customized = req.query?.customized === "true";
 
-    if (!pizzaId || !count) {
+    if (!itemId || !count) {
       return res.status(400).json({
         success: false,
-        message: "Item & Count are required",
+        message: "Item id & Count are required",
       });
     }
 
@@ -171,10 +202,7 @@ router.put("/:pizzaId", verifyToken, async (req, res) => {
 
     let exists = false;
     cart.items = cart.items?.map((item) => {
-      if (
-        item.pizza._id?.toString() === pizzaId &&
-        item.customized === customized
-      ) {
+      if (item._id?.toString() === itemId) {
         exists = true;
         return { ...item, quantity: count };
       } else return item;
@@ -203,13 +231,12 @@ router.put("/:pizzaId", verifyToken, async (req, res) => {
   }
 });
 
-router.delete("/:pizzaId", verifyToken, async (req, res) => {
+router.delete("/:itemId", verifyToken, async (req, res) => {
   try {
     const { _id } = req.user;
-    const { pizzaId } = req.params;
-    const customized = req.query.customized === "true";
+    const { itemId } = req.params;
 
-    if (!pizzaId) {
+    if (!itemId) {
       return res.status(400).json({
         success: false,
         message: "Item id is required",
@@ -228,8 +255,7 @@ router.delete("/:pizzaId", verifyToken, async (req, res) => {
     }
 
     const pizzaExists = cart.items.some(
-      (item) =>
-        item.pizza?._id.toString() === pizzaId && item.customized === customized
+      (item) => item._id.toString() === itemId,
     );
     if (!pizzaExists) {
       return res.status(404).json({
@@ -238,13 +264,7 @@ router.delete("/:pizzaId", verifyToken, async (req, res) => {
       });
     }
 
-    cart.items = cart.items.filter(
-      (item) =>
-        !(
-          item.pizza?._id.toString() === pizzaId &&
-          item.customized === customized
-        )
-    );
+    cart.items = cart.items.filter((item) => !(item._id.toString() === itemId));
 
     await cart.save();
 

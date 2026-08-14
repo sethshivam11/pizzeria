@@ -24,7 +24,7 @@ function App() {
         <Route path="/menu" element={<Menu />} />
         <Route path="/cart" element={<Cart />} />
         <Route path="/customize" element={<Customize />} />
-        <Route path="/customize/:pizzaId" element={<CustomizePizza />} />
+        <Route path="/customize/:itemId" element={<CustomizePizza />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       <Footer />
