@@ -2,11 +2,11 @@ import { Link } from "react-router-dom";
 import { useCart } from "../context/CartProvider";
 import { History } from "lucide-react";
 
-const PizzaItem = ({ pizza, customized }) => {
+const PizzaItem = ({ itemId, pizza, customized }) => {
   return (
     <div className="col-lg-6 col-12">
       <Link
-        to={`/customize/${pizza._id}${customized ? "?customized=true" : ""}`}
+        to={`/customize/${itemId}`}
         className="border p-4 d-flex align-items-center justify-content-around gap-4 rounded text-dark text-decoration-none position-relative"
       >
         {customized && (
@@ -104,6 +104,7 @@ function Customize() {
           )}
           {cart.items?.map((item, index) => (
             <PizzaItem
+              itemId={item._id}
               pizza={item.pizza}
               customized={item?.customized}
               key={index}

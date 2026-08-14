@@ -11,12 +11,15 @@ function MenuItem({ pizza, className = "" }) {
   const { addToCart, cart, updateCount, removeFromCart } = useCart();
   const { user } = useUser();
 
-  const inCart = useMemo(() => {
-    return cart.items?.some(
+  const itemId = useMemo(() => {
+    const item = cart.items?.find(
       (item) =>
         String(item.pizza?._id || item.pizza) === String(pizza._id) &&
-        item.customized === false
+        item.customized === false &&
+        item.ingredients.length === 0,
     );
+    if (!item || !item?._id) return null;
+    return item?._id;
   }, [cart.items, pizza._id]);
 
   const quantity = useMemo(() => {
@@ -24,7 +27,8 @@ function MenuItem({ pizza, className = "" }) {
       cart.items?.find(
         (item) =>
           String(item.pizza?._id || item.pizza) === String(pizza._id) &&
-          item.customized === false
+          item.customized === false &&
+          item.ingredients.length === 0,
       )?.quantity || 0
     );
   }, [cart.items, pizza._id]);
@@ -41,13 +45,25 @@ function MenuItem({ pizza, className = "" }) {
   };
 
   const updateQuantity = async (quantity) => {
-    const data = await updateCount(pizza._id, quantity);
+    const itemId = cart.items.find((item) => item?.pizza?._id === pizza?._id);
+    if (!itemId) {
+      console.log("Pizza not found");
+      toast.error("Something went wrong!");
+      return;
+    }
+    const data = await updateCount(itemId, quantity);
     if (!data.success) {
       toast.error(data.message);
     }
   };
 
   const removeItem = async () => {
+    const itemId = cart.items.find((item) => item?.pizza?._id === pizza?._id);
+    if (!itemId) {
+      console.log("Pizza not found");
+      toast.error("Something went wrong!");
+      return;
+    }
     const data = await removeFromCart(pizza._id);
     if (!data.success) {
       toast.error(data.message);
@@ -104,9 +120,19 @@ function MenuItem({ pizza, className = "" }) {
             />
           </div>
         </div>
-        {inCart ? (
+        {!itemId ? (
+          <div>
+            <button
+              className="btn text-nowrap mt-2 float-end"
+              style={{ backgroundColor: "gold" }}
+              onClick={handleAdd}
+            >
+              Add to Cart
+            </button>
+          </div>
+        ) : (
           <div className="d-flex justify-content-between align-items-center">
-            <Link to={`/customize/${pizza?._id}`}>Customize</Link>
+            <Link to={`/customize/${itemId}`}>Customize</Link>
             <div className="d-flex align-items-center gap-2">
               {quantity === 1 ? (
                 <button
@@ -134,16 +160,6 @@ function MenuItem({ pizza, className = "" }) {
                 <Plus />
               </button>
             </div>
-          </div>
-        ) : (
-          <div>
-            <button
-              className="btn text-nowrap mt-2 float-end"
-              style={{ backgroundColor: "gold" }}
-              onClick={handleAdd}
-            >
-              Add to Cart
-            </button>
           </div>
         )}
       </div>
