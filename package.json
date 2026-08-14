@@ -1,0 +1,22 @@
+{
+  "name": "pizzeria",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "cd pizzeriaapp && npm i && npm run build && cd ../pizzeriaserver && npm i",
+    "start": "node --env-file=.env pizzeriaserver/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sethshivam11/pizzeria.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/sethshivam11/pizzeria/issues"
+  },
+  "homepage": "https://pizzeria-store.onrender.com"
+}
