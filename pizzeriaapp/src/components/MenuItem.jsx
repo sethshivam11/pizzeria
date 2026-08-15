@@ -58,13 +58,15 @@ function MenuItem({ pizza, className = "" }) {
   };
 
   const removeItem = async () => {
-    const itemId = cart.items.find((item) => item?.pizza?._id === pizza?._id);
+    const itemId = cart.items.find(
+      (item) => item?.pizza?._id === pizza?._id,
+    )?._id;
     if (!itemId) {
       console.log("Pizza not found");
       toast.error("Something went wrong!");
       return;
     }
-    const data = await removeFromCart(pizza._id);
+    const data = await removeFromCart(itemId);
     if (!data.success) {
       toast.error(data.message);
     }

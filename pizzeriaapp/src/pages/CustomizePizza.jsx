@@ -82,7 +82,6 @@ function Build() {
 
   const pizza = useMemo(() => {
     const item = cart?.items?.find((item) => item._id === itemId);
-    console.log(item)
     if (!item?.pizza) return null;
     if (item?.ingredients) setItems(item.ingredients);
     return { ...item.pizza, customized: item?.customized };
@@ -191,7 +190,6 @@ function Build() {
                           (item) => item._id === ingredient._id,
                         )}
                         onChange={(e) => {
-                          console.log(ingredient);
                           if (e.target.checked) {
                             setItems((prev) => [...prev, ingredient]);
                           } else {
