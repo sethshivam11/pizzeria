@@ -30,6 +30,8 @@ function Menu() {
 
   useEffect(() => {
     getPizzas();
+    if(document.title === "Menu - Pizzeria") return;
+    document.title = "Menu - Pizzeria";
   }, []);
 
   return (

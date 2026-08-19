@@ -124,6 +124,8 @@ function Build() {
 
   useEffect(() => {
     getIngredients();
+    if(document.title === `Customize ${pizza?.name} - Pizzeria"`) return;
+    document.title = `Customize ${pizza?.name} - Pizzeria`;
   }, []);
 
   if (!pizza && cart?.user && !cartLoading && user._id) {

@@ -35,7 +35,9 @@ function Login() {
     if(userLoading) return;
     if(user._id.length === 0) {
       navigate("/");
-    } 
+    }
+    if(document.title === "Login - Pizzeria") return;
+    document.title = "Login - Pizzeria";
   }, [user])
 
   return (

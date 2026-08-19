@@ -1,8 +1,14 @@
+import { useEffect } from "react";
 import image1 from "/image-1.webp";
 import image2 from "/image-2.webp";
 import image3 from "/image-3.webp";
 
 function Home() {
+  useEffect(() => {
+    if(document.title === "Pizzeria") return;
+    document.title = "Pizzeria";
+  }, []);
+
   return (
     <div className="container py-2">
       <h1 className="h1 mt-3 text-center">Our Story</h1>

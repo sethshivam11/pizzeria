@@ -1,6 +1,12 @@
+import { useEffect } from "react";
 import { Link } from "react-router-dom";
 
 function NotFound() {
+
+  useEffect(() => {
+    if(document.title === "Not Found - Pizzeria") return;
+    document.title = "Not Found - Pizzeria";
+  }, [])
   return (
     <div className="w-100 vh-100 d-flex justify-content-center align-items-center flex-column z-3 position-fixed top-0 left-0 bg-white">
       <div>

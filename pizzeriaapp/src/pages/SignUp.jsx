@@ -36,6 +36,9 @@ function SignUp() {
     if (user._id.length === 0) {
       navigate("/");
     }
+
+    if(document.title === "Signup - Pizzeria") return;
+    document.title = "Signup - Pizzeria";
   }, [user]);
 
   return (

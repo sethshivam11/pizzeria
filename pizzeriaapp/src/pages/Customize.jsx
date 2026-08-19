@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { useCart } from "../context/CartProvider";
 import { History } from "lucide-react";
+import { useEffect } from "react";
 
 const PizzaItem = ({ itemId, pizza, customized }) => {
   return (
@@ -59,6 +60,11 @@ const PizzaItem = ({ itemId, pizza, customized }) => {
 
 function Customize() {
   const { cart, loading } = useCart();
+
+  useEffect(() => {
+    if(document.title === "Customize - Pizzeria") return;
+    document.title = "Customize - Pizzeria";
+  }, [])
 
   return (
     <div className="container">

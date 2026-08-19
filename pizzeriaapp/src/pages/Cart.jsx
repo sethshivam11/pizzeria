@@ -38,6 +38,8 @@ function Cart() {
       toast("Please login to continue");
       navigate("/login");
     }
+    if(document.title === "Cart - Pizzeria") return;
+    document.title = "Cart - Pizzeria";
   }, [user]);
 
   return (
